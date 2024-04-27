@@ -4,6 +4,7 @@ import pyaudio
 import sounddevice as sd
 import time
 from tkinter import END, LEFT, filedialog
+import concurrent.futures
 
 
 # GUI更新 (ラジオボタンに依る構成の変更)
@@ -49,24 +50,47 @@ def add_file(file_list):
 def preview_action(key_var, own_interface_var, audio_path):
     print("test")
 
+
+
+
+
+
+
+    
+    
+
+
 #音声処理
+
+def play_with_delay(audio_data, delay_ms, output_device):
+    print("play_with_delay")
+    # 再生処理
+    start_time = time.time()
+    for frame in audio_data:
+        sd.play(frame, samplerate=44100, device=output_device)
+        #time.sleep(delay_ms / 1000.0 - (time.time() - start_time))
+        start_time = time.time()
+
 def play_action(delay_entry, own_key_var, stream_key_var, own_interface_var, stream_interface_var, audio_path):
-    print(f"Delay set to: {delay_entry.get()}")
-    # print(f"Pitch set to: {pitch_var.get()}")
-    print(f"Own Key set to: {own_key_var.get()}")
-    print(f"Stream Key set to: {stream_key_var.get()}")
-    print(f"Stream Output Interface: {stream_interface_var.get()}")
+    try:
+        # 音声データを読み込む
+        with open(audio_path, "rb") as f:
+            audio_data = f.read()
+
+        # 遅延なしで再生するスレッド
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        future = executor.submit(play_with_delay, audio_data, 0, own_interface_var.get())
 
 
 
-    #配信者側出力
+        time.sleep(float(delay_entry.get() )/ 1000.0)
+        # delay_entry ms遅延で再生するスレッド
+        executor.submit(play_with_delay, audio_data, delay_entry, stream_interface_var.get())
 
-
-
-
-
-    #配信先出力
-
+        # スレッドの終了を待つ
+        future.result()
+    except Exception as e:
+        print(f"Error in play_action: {e}")
 
 
 
