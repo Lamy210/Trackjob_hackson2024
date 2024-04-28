@@ -4,19 +4,29 @@ from tkinter import ACTIVE, LEFT, RIGHT, W, BooleanVar, Button, Frame, IntVar, L
 
 from button_action import add_file, key_radio_toggle, play_action, preview_action, update_radio_buttons
 from settings import load_settings
+from settings import load_settings
 
 
 # def validate_input(P):
 #     return P.isdigit() or P == ""
 
-
 def list_audio_interfaces():
-    #
-    interfaces = sd.query_devices()
+    """現在利用可能な音声デバイスのみをリストする関数"""
     unique_devices = set()
-    for device in interfaces:
-        if device['max_output_channels'] > 0:
+    available_devices = set()
+
+    for device in sd.query_devices():
+        try:
+            #sd.Stream(channels=2, device=device['name']).stream_info()
+            sd.play(samplerate=44100, device=device['name'], data=[0, 0])
             unique_devices.add(device['name'])
+            available_devices.add(device['name'])
+        except Exception as e:
+            print(f"デバイス '{device['name']}' は利用不可: {e}")
+
+    # 利用可能なデバイスのみを `unique_devices` に残す
+    unique_devices &= available_devices
+
     return list(unique_devices)
 
 
